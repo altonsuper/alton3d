@@ -22,6 +22,14 @@
     .vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 35%, #030912a8 100%); }
     @media (max-width: 520px) { .hud { padding: 20px; } #status { flex-basis: 100%; padding: 3px 4px; } }
   </style>
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
 </head>
 <body>
   <div class="hud">
@@ -38,8 +46,8 @@
   <div class="vignette"></div>
 
   <script type="module">
-    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
-    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js';
+    import * as THREE from 'three';
+    import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
     const status = document.querySelector('#status');
     const scene = new THREE.Scene();
@@ -83,9 +91,9 @@
     let dashStarted = -Infinity;
     const clock = new THREE.Clock();
     const loader = new GLTFLoader();
+    const modelUrl = 'https://cdn.jsdelivr.net/gh/altonsuper/alton3d@model/dragon.glb';
 
-    // The model is stored on the model branch, so load it through jsDelivr.
-    loader.load('https://cdn.jsdelivr.net/gh/altonsuper/alton3d@model/dragon.glb', (gltf) => {
+    loader.load(modelUrl, (gltf) => {
       const model = gltf.scene;
       const bounds = new THREE.Box3().setFromObject(model);
       const size = bounds.getSize(new THREE.Vector3());
@@ -98,10 +106,12 @@
         mixer = new THREE.AnimationMixer(model);
         gltf.animations.forEach((clip) => mixer.clipAction(clip).play());
       }
-      status.textContent = gltf.animations.length ? 'Ready — model animation included' : 'Ready — use Fly and Dash';
-    }, undefined, (error) => {
-      console.error('Could not load dragon.glb from the model branch', error);
-      status.textContent = 'Could not load dragon.glb — check the model branch URL';
+      status.textContent = gltf.animations.length ? 'Dragon loaded — model animation included' : 'Dragon loaded — use Fly and Dash';
+    }, (event) => {
+      if (event.total) status.textContent = `Loading dragon.glb… ${Math.round(event.loaded / event.total * 100)}%`;
+    }, (error) => {
+      console.error(`Could not load model from ${modelUrl}`, error);
+      status.textContent = 'Dragon failed to load — check the browser console';
     });
 
     const flyButton = document.querySelector('#flyButton');
@@ -118,8 +128,8 @@
 
     function animate() {
       requestAnimationFrame(animate);
-      const elapsed = clock.getElapsedTime();
       const delta = Math.min(clock.getDelta(), 0.05);
+      const elapsed = clock.elapsedTime;
       if (mixer) mixer.update(delta);
 
       const bob = flying ? Math.sin(elapsed * 2.2) * 0.22 : 0;
