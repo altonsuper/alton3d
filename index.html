@@ -4,27 +4,65 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#07111f">
-  <meta name="description" content="View and explore 3D GLB models in your browser.">
-  <title>Alton 3D Model Viewer</title>
+  <meta name="description" content="Alton's 3D creations: explore interactive models and experiments.">
+  <title>Alton 3D — Creations</title>
   <style>
-    :root { color-scheme: dark; font-family: system-ui, -apple-system, Segoe UI, sans-serif; }
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
     * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; overflow: hidden; color: #eef7ff; background: #07111f; }
-    canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
-    .hud { position: fixed; z-index: 2; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(18px, 4vw, 42px); pointer-events: none; }
-    header { max-width: 560px; }
-    h1 { margin: 0 0 8px; font-size: clamp(28px, 5vw, 48px); line-height: 1; letter-spacing: -.04em; text-shadow: 0 4px 12px #0008; }
-    p { margin: 0; color: #a9bfd3; font-size: 14px; text-shadow: 0 2px 4px #0008; }
-    .bottom { display: grid; gap: 12px; justify-items: start; pointer-events: auto; }
-    .model-picker, .motion-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
-    button { border: 1px solid #42627c; border-radius: 999px; background: #10243a; color: #eef7ff; padding: 10px 16px; font: inherit; font-weight: 650; cursor: pointer; transition: .18s ease; }
-    button:hover:not(:disabled) { transform: translateY(-2px); background: #1a3855; }
-    button[aria-pressed="true"], button.primary { border-color: #7de6ff; background: #55cbe8; color: #062032; }
-    button:disabled { opacity: .48; cursor: not-allowed; }
-    #status { max-width: min(680px, calc(100vw - 40px)); color: #b8cce0; font-size: 13px; }
+    body { margin: 0; min-height: 100vh; color: #eef7ff; background: #07111f; }
+    button { font: inherit; }
+    .landing { min-height: 100vh; padding: clamp(24px, 6vw, 76px); background: radial-gradient(ellipse at 78% 12%, #12334a 0, transparent 38%), #07111f; }
+    .wrap { width: min(1050px, 100%); margin: 0 auto; }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: clamp(58px, 11vh, 112px); color: #a9bfd3; font-size: 13px; letter-spacing: .15em; text-transform: uppercase; }
+    .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid #39617b; border-radius: 12px; color: #7de6ff; font-weight: 800; letter-spacing: 0; }
+    .intro { max-width: 700px; margin-bottom: 48px; }
+    .eyebrow { margin-bottom: 14px; color: #7de6ff; font-size: 12px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; }
+    h1 { margin: 0 0 16px; font-size: clamp(42px, 8vw, 82px); line-height: .98; letter-spacing: -.065em; }
+    .intro p { max-width: 570px; margin: 0; color: #a9bfd3; font-size: clamp(16px, 2vw, 19px); line-height: 1.65; }
+    .section-title { display: flex; align-items: baseline; gap: 12px; margin: 0 0 18px; font-size: 14px; letter-spacing: .04em; }
+    .section-title span { color: #7892a8; font-size: 12px; font-weight: 400; }
+    .cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .card { position: relative; display: flex; min-height: 280px; flex-direction: column; justify-content: space-between; overflow: hidden; padding: clamp(22px, 3vw, 32px); border: 1px solid #24415a; border-radius: 22px; background: linear-gradient(145deg, #10243a, #0b1828 72%); color: inherit; text-align: left; cursor: pointer; transition: transform .2s ease, border-color .2s ease, background .2s ease; }
+    .card:hover:not(:disabled), .card:focus-visible { transform: translateY(-4px); border-color: #69cde8; outline: none; }
+    .card:disabled { cursor: default; }
+    .card.dragon::after { position: absolute; top: 12px; right: 12px; content: '🐉'; font-size: clamp(76px, 13vw, 142px); opacity: .18; transform: rotate(-15deg); filter: drop-shadow(0 0 24px #45c8ed); }
+    .card.sword { border-style: dashed; background: linear-gradient(145deg, #101e2d, #0b1624 72%); }
+    .card.sword::after { position: absolute; top: 14px; right: 22px; content: '⚔️'; font-size: clamp(64px, 10vw, 110px); opacity: .12; transform: rotate(-20deg); filter: grayscale(1); }
+    .card-top, .card-bottom { position: relative; z-index: 1; }
+    .tag { display: inline-flex; align-items: center; gap: 7px; padding: 6px 10px; border: 1px solid #31516b; border-radius: 99px; color: #a9bfd3; font-size: 11px; }
+    .tag.ready { border-color: #286d70; color: #8af0dc; }
+    .tag.soon { border-color: #455366; color: #afbdca; }
+    .card h3 { margin: 0 0 7px; font-size: 27px; letter-spacing: -.04em; }
+    .card p { max-width: 330px; margin: 0; color: #a9bfd3; font-size: 14px; line-height: 1.55; }
+    .card-action { display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; color: #7de6ff; font-size: 13px; font-weight: 700; }
+    .sword .card-action { color: #9aabba; }
+    footer { margin-top: 42px; color: #71879b; font-size: 12px; }
+
+    .viewer { position: fixed; z-index: 5; inset: 0; display: none; overflow: hidden; background: #07111f; }
+    .viewer.open { display: block; }
+    .viewer canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .viewer-hud { position: absolute; z-index: 2; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(18px, 4vw, 38px); pointer-events: none; }
+    .viewer-head, .viewer-controls { pointer-events: auto; }
+    .viewer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+    .viewer-head h2 { margin: 0 0 6px; font-size: clamp(24px, 4vw, 38px); letter-spacing: -.045em; }
+    .viewer-head p { color: #a9bfd3; font-size: 13px; }
+    .controls-row { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; }
+    .control { border: 1px solid #42627c; border-radius: 999px; padding: 10px 16px; background: #10243a; color: #eef7ff; font-weight: 650; cursor: pointer; transition: .18s ease; }
+    .control:hover { transform: translateY(-2px); background: #1a3855; }
+    .control.primary { border-color: #7de6ff; background: #55cbe8; color: #062032; }
+    #status { margin-top: 11px; color: #b8cce0; font-size: 13px; }
     #status.error { color: #ff9a9a; }
-    .vignette { position: fixed; z-index: 1; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 40%, #030912a8 100%); }
-    @media (max-width: 520px) { .hud { padding: 20px; } .bottom { gap: 9px; } button { padding: 9px 13px; } }
+    .back { white-space: nowrap; }
+    .vignette { position: absolute; z-index: 1; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 42%, #030912a8 100%); }
+    @media (max-width: 650px) {
+      .brand { margin-bottom: 58px; }
+      .cards { grid-template-columns: 1fr; }
+      .card { min-height: 220px; }
+      footer { margin-top: 28px; }
+      .viewer-head { align-items: flex-start; }
+      .viewer-controls { max-width: 100%; }
+      .control { padding: 9px 13px; }
+    }
   </style>
   <script type="importmap">
     { "imports": {
@@ -34,109 +72,120 @@
   </script>
 </head>
 <body>
-  <div class="hud">
-    <header>
-      <h1>Alton 3D Viewer</h1>
-      <p>Choose a model to view. Drag to orbit, right-click to pan, and scroll to zoom.</p>
-    </header>
-    <section class="bottom" aria-label="Viewer controls">
-      <div class="model-picker" aria-label="Choose a model">
-        <button id="dragonButton" type="button" aria-pressed="true">🐉 Dragon</button>
-        <button id="swordButton" type="button" aria-pressed="false">⚔️ Sword <span id="swordBadge">(placeholder)</span></button>
+  <main id="landing" class="landing">
+    <div class="wrap">
+      <div class="brand"><span class="brand-mark">A</span> Alton · 3D creations</div>
+      <section class="intro" aria-labelledby="pageTitle">
+        <div class="eyebrow">Personal portfolio</div>
+        <h1 id="pageTitle">Ideas made<br>to be explored.</h1>
+        <p>A small collection of 3D creations and experiments. Choose a project to open its interactive viewer.</p>
+      </section>
+      <section aria-labelledby="workTitle">
+        <h2 class="section-title" id="workTitle">My creations <span>— select a project</span></h2>
+        <div class="cards">
+          <button class="card dragon" id="openDragon" type="button" aria-label="Open the Dragon 3D viewer">
+            <span class="card-top"><span class="tag ready">● Ready to explore</span></span>
+            <span class="card-bottom"><h3>Dragon</h3><p>A fantasy creature model, ready to explore in an interactive 3D viewer.</p><span class="card-action">Open 3D viewer <span aria-hidden="true">↗</span></span></span>
+          </button>
+          <button class="card sword" id="openSword" type="button" aria-label="Sword model coming soon">
+            <span class="card-top"><span class="tag soon">◌ Coming soon</span></span>
+            <span class="card-bottom"><h3>Sword</h3><p>A new model is being prepared. This project card is ready for the GLB asset.</p><span class="card-action">Model placeholder <span aria-hidden="true">＋</span></span></span>
+          </button>
+        </div>
+      </section>
+      <footer>Built with curiosity · More creations coming soon</footer>
+    </div>
+  </main>
+
+  <section id="dragonViewer" class="viewer" aria-label="Interactive dragon viewer" aria-hidden="true">
+    <div class="viewer-hud">
+      <div class="viewer-head">
+        <div><h2>Dragon</h2><p>Drag to orbit · Right-click to pan · Scroll to zoom</p></div>
+        <button class="control back" id="backButton" type="button">← Back to creations</button>
       </div>
-      <div class="motion-controls" id="motionControls">
-        <button id="flyButton" class="primary" type="button">✦ Fly</button>
-        <button id="dashButton" type="button">➜ Dash</button>
+      <div class="viewer-controls">
+        <div class="controls-row">
+          <button class="control primary" id="flyButton" type="button">✦ Fly</button>
+          <button class="control" id="dashButton" type="button">➜ Dash</button>
+        </div>
+        <p id="status" role="status" aria-live="polite">Click Dragon to load the model…</p>
       </div>
-      <p id="status" role="status" aria-live="polite">Loading dragon.glb…</p>
-    </section>
-  </div>
-  <div class="vignette"></div>
+    </div>
+    <div class="vignette"></div>
+  </section>
 
   <script type="module">
     import * as THREE from 'three';
     import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    const ASSETS = {
-      dragon: 'https://cdn.jsdelivr.net/gh/altonsuper/alton3d@model/dragon.glb',
-      // Upload sword.glb to the root of the model branch to enable this option.
-      sword: 'https://cdn.jsdelivr.net/gh/altonsuper/alton3d@model/sword.glb'
-    };
+    const dragonUrl = 'https://cdn.jsdelivr.net/gh/altonsuper/alton3d@model/dragon.glb';
+    const landing = document.querySelector('#landing');
+    const viewer = document.querySelector('#dragonViewer');
     const status = document.querySelector('#status');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color('#09182a');
     scene.fog = new THREE.FogExp2('#09182a', 0.025);
 
     const camera = new THREE.PerspectiveCamera(45, innerWidth / innerHeight, 0.1, 100);
-    camera.position.set(0, 1.4, 7.5);
+    camera.position.set(0, 1.5, 7);
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.setSize(innerWidth, innerHeight);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.2;
-    document.body.prepend(renderer.domElement);
+    viewer.prepend(renderer.domElement);
 
-    scene.add(new THREE.HemisphereLight(0xb9e8ff, 0x182137, 1.8));
-    const keyLight = new THREE.DirectionalLight(0xffe4bd, 2.8);
+    scene.add(new THREE.HemisphereLight(0xb9e8ff, 0x182137, 1.7));
+    const keyLight = new THREE.DirectionalLight(0xffe4bd, 2.7);
     keyLight.position.set(-4, 6, 5);
     scene.add(keyLight);
-    const rimLight = new THREE.PointLight(0x36bdf2, 24, 18);
+    const rimLight = new THREE.PointLight(0x36bdf2, 22, 18);
     rimLight.position.set(5, 2, -4);
     scene.add(rimLight);
 
-    const starsGeometry = new THREE.BufferGeometry();
+    const starGeometry = new THREE.BufferGeometry();
     const starPositions = [];
-    for (let i = 0; i < 700; i++) {
-      starPositions.push((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 30, -5 - Math.random() * 30);
-    }
-    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-    const stars = new THREE.Points(starsGeometry, new THREE.PointsMaterial({ color: 0xa9dfff, size: 0.04, transparent: true, opacity: 0.8 }));
+    for (let i = 0; i < 700; i++) starPositions.push((Math.random() - .5) * 40, (Math.random() - .5) * 30, -5 - Math.random() * 30);
+    starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+    const stars = new THREE.Points(starGeometry, new THREE.PointsMaterial({ color: 0xa9dfff, size: .04, transparent: true, opacity: .8 }));
     scene.add(stars);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.target.set(0, 0.4, 0);
-
-    const loader = new GLTFLoader();
+    controls.dampingFactor = .05;
+    controls.target.set(0, 0, 0);
     const modelRoot = new THREE.Group();
     scene.add(modelRoot);
-    let mixer = null;
-    let selectedModel = 'dragon';
+    const loader = new GLTFLoader();
+    const clock = new THREE.Clock();
+    let loaded = false;
+    let loading = false;
     let requestId = 0;
+    let mixer = null;
     let flying = true;
     let dashStarted = -Infinity;
-    const clock = new THREE.Clock();
-    const dragonButton = document.querySelector('#dragonButton');
-    const swordButton = document.querySelector('#swordButton');
-    const flyButton = document.querySelector('#flyButton');
-    const motionControls = document.querySelector('#motionControls');
 
-    function setStatus(message, isError = false) {
+    function setStatus(message, error = false) {
       status.textContent = message;
-      status.classList.toggle('error', isError);
+      status.classList.toggle('error', error);
     }
 
-    function selectModel(name) {
-      selectedModel = name;
-      const thisRequest = ++requestId;
-      dragonButton.setAttribute('aria-pressed', String(name === 'dragon'));
-      swordButton.setAttribute('aria-pressed', String(name === 'sword'));
-      motionControls.hidden = name !== 'dragon';
-      modelRoot.clear();
-      mixer = null;
-      setStatus(`Loading ${name}.glb…`);
-
-      loader.load(ASSETS[name], (gltf) => {
-        if (thisRequest !== requestId) return;
+    function loadDragon() {
+      if (loaded || loading) return;
+      loading = true;
+      const currentRequest = ++requestId;
+      setStatus('Loading dragon.glb…');
+      loader.load(dragonUrl, (gltf) => {
+        if (currentRequest !== requestId) return;
+        loading = false;
+        loaded = true;
         const model = gltf.scene;
         const bounds = new THREE.Box3().setFromObject(model);
         const size = bounds.getSize(new THREE.Vector3());
         const center = bounds.getCenter(new THREE.Vector3());
-        const maxDimension = Math.max(size.x, size.y, size.z) || 1;
-        const scale = 3.8 / maxDimension;
+        const scale = 3.8 / (Math.max(size.x, size.y, size.z) || 1);
         model.scale.setScalar(scale);
         model.position.sub(center.multiplyScalar(scale));
         modelRoot.add(model);
@@ -144,60 +193,70 @@
           mixer = new THREE.AnimationMixer(model);
           gltf.animations.forEach((clip) => mixer.clipAction(clip).play());
         }
-        controls.target.set(0, 0, 0);
-        setStatus(`${name === 'dragon' ? 'Dragon' : 'Sword'} loaded — drag to rotate, scroll to zoom.`);
+        setStatus('Dragon loaded — drag to orbit, scroll to zoom.');
       }, (event) => {
-        if (thisRequest === requestId && event.total) {
-          setStatus(`Loading ${name}.glb… ${Math.round(event.loaded / event.total * 100)}%`);
-        }
+        if (currentRequest === requestId && event.total) setStatus(`Loading dragon.glb… ${Math.round(event.loaded / event.total * 100)}%`);
       }, (error) => {
-        if (thisRequest !== requestId) return;
-        console.error(`Could not load ${name} model from ${ASSETS[name]}`, error);
-        if (name === 'sword') {
-          setStatus('Sword placeholder: upload sword.glb to the model branch root, then refresh.', true);
-        } else {
-          setStatus('Dragon failed to load. Check the browser console and CDN URL.', true);
-        }
+        if (currentRequest !== requestId) return;
+        loading = false;
+        console.error('Could not load dragon model:', dragonUrl, error);
+        setStatus('Could not load the dragon. Check your connection and refresh to retry.', true);
       });
     }
 
-    dragonButton.addEventListener('click', () => selectModel('dragon'));
-    swordButton.addEventListener('click', () => selectModel('sword'));
+    function openViewer() {
+      landing.hidden = true;
+      viewer.classList.add('open');
+      viewer.setAttribute('aria-hidden', 'false');
+      renderer.setSize(innerWidth, innerHeight);
+      loadDragon();
+    }
+    function closeViewer() {
+      viewer.classList.remove('open');
+      viewer.setAttribute('aria-hidden', 'true');
+      landing.hidden = false;
+    }
+
+    document.querySelector('#openDragon').addEventListener('click', openViewer);
+    document.querySelector('#backButton').addEventListener('click', closeViewer);
+    document.querySelector('#openSword').addEventListener('click', () => {
+      window.alert('Sword is coming soon. Upload sword.glb to the model branch to add it here.');
+    });
     document.querySelector('#dashButton').addEventListener('click', () => { dashStarted = clock.elapsedTime; });
-    flyButton.addEventListener('click', () => {
+    document.querySelector('#flyButton').addEventListener('click', (event) => {
       flying = !flying;
-      flyButton.textContent = flying ? '✦ Fly' : 'Ⅱ Pause';
-      flyButton.classList.toggle('primary', flying);
+      event.currentTarget.textContent = flying ? '✦ Fly' : 'Ⅱ Pause';
+      event.currentTarget.classList.toggle('primary', flying);
     });
     addEventListener('keydown', (event) => {
-      if (event.code === 'Space' && selectedModel === 'dragon') {
+      if (event.code === 'Escape' && viewer.classList.contains('open')) closeViewer();
+      if (event.code === 'Space' && viewer.classList.contains('open')) {
         event.preventDefault();
         flying = !flying;
-        flyButton.textContent = flying ? '✦ Fly' : 'Ⅱ Pause';
-        flyButton.classList.toggle('primary', flying);
+        const button = document.querySelector('#flyButton');
+        button.textContent = flying ? '✦ Fly' : 'Ⅱ Pause';
+        button.classList.toggle('primary', flying);
       }
-      if ((event.code === 'ShiftLeft' || event.code === 'ShiftRight') && selectedModel === 'dragon') dashStarted = clock.elapsedTime;
+      if ((event.code === 'ShiftLeft' || event.code === 'ShiftRight') && viewer.classList.contains('open')) dashStarted = clock.elapsedTime;
     });
 
     function animate() {
       requestAnimationFrame(animate);
-      const delta = Math.min(clock.getDelta(), 0.05);
+      const delta = Math.min(clock.getDelta(), .05);
       const elapsed = clock.elapsedTime;
       if (mixer) mixer.update(delta);
-      if (selectedModel === 'dragon') {
-        const bob = flying ? Math.sin(elapsed * 2.2) * 0.18 : 0;
-        const dashAge = elapsed - dashStarted;
-        const dash = dashAge >= 0 && dashAge < 0.65 ? Math.sin(Math.PI * dashAge / 0.65) : 0;
-        modelRoot.position.set(Math.sin(elapsed * 0.55) * 0.4 + dash * 0.9, bob + dash * 0.08, 0);
-        modelRoot.rotation.z = flying ? Math.sin(elapsed * 2.2) * 0.04 - dash * 0.1 : 0;
-        modelRoot.rotation.y = Math.sin(elapsed * 0.45) * 0.1 - dash * 0.14;
-      } else {
-        modelRoot.position.set(0, Math.sin(elapsed * 1.2) * 0.06, 0);
-        modelRoot.rotation.y = elapsed * 0.18;
+      if (viewer.classList.contains('open')) {
+        if (loaded) {
+          const dashAge = elapsed - dashStarted;
+          const dash = dashAge >= 0 && dashAge < .65 ? Math.sin(Math.PI * dashAge / .65) : 0;
+          modelRoot.position.set(Math.sin(elapsed * .55) * .35 + dash * .85, (flying ? Math.sin(elapsed * 2.2) * .17 : 0) + dash * .06, 0);
+          modelRoot.rotation.z = flying ? Math.sin(elapsed * 2.2) * .035 - dash * .09 : 0;
+          modelRoot.rotation.y = Math.sin(elapsed * .45) * .1 - dash * .13;
+        }
+        stars.rotation.y = elapsed * .005;
+        controls.update();
+        renderer.render(scene, camera);
       }
-      stars.rotation.y = elapsed * 0.005;
-      controls.update();
-      renderer.render(scene, camera);
     }
     animate();
 
@@ -207,7 +266,6 @@
       renderer.setSize(innerWidth, innerHeight);
       renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     });
-    selectModel('dragon');
   </script>
 </body>
 </html>
