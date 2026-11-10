@@ -84,8 +84,8 @@
     const clock = new THREE.Clock();
     const loader = new GLTFLoader();
 
-    // Place dragon.glb beside this HTML file in the repository.
-    loader.load('./dragon.glb', (gltf) => {
+    // The model is stored on the model branch, so load it through jsDelivr.
+    loader.load('https://cdn.jsdelivr.net/gh/altonsuper/alton3d@model/dragon.glb', (gltf) => {
       const model = gltf.scene;
       const bounds = new THREE.Box3().setFromObject(model);
       const size = bounds.getSize(new THREE.Vector3());
@@ -100,8 +100,8 @@
       }
       status.textContent = gltf.animations.length ? 'Ready — model animation included' : 'Ready — use Fly and Dash';
     }, undefined, (error) => {
-      console.error('Could not load ./dragon.glb', error);
-      status.textContent = 'Could not load dragon.glb — add it beside index.html';
+      console.error('Could not load dragon.glb from the model branch', error);
+      status.textContent = 'Could not load dragon.glb — check the model branch URL';
     });
 
     const flyButton = document.querySelector('#flyButton');
