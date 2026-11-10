@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07111f">
+  <title>Dragon Flight</title>
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, -apple-system, Segoe UI, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; overflow: hidden; color: #eef7ff; background: #07111f; }
+    canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+    .hud { position: fixed; z-index: 1; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: clamp(18px, 4vw, 42px); pointer-events: none; }
+    header { max-width: 520px; }
+    h1 { margin: 0 0 8px; font-size: clamp(28px, 5vw, 54px); line-height: 1; letter-spacing: -.04em; }
+    p { margin: 0; color: #a9bfd3; font-size: 14px; }
+    .controls { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; pointer-events: auto; }
+    button { border: 1px solid #42627c; border-radius: 999px; background: #10243a; color: #eef7ff; padding: 11px 18px; font: inherit; font-weight: 650; cursor: pointer; transition: .2s ease; }
+    button:hover { transform: translateY(-2px); background: #1a3855; }
+    button.primary { border-color: #7de6ff; background: #55cbe8; color: #062032; }
+    #status { padding-left: 5px; color: #a9bfd3; font-size: 13px; }
+    .vignette { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 35%, #030912a8 100%); }
+    @media (max-width: 520px) { .hud { padding: 20px; } #status { flex-basis: 100%; padding: 3px 4px; } }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <header>
+      <h1>Dragon Flight</h1>
+      <p>Take to the skies. Fly continuously or dash through the clouds.</p>
+    </header>
+    <div class="controls">
+      <button id="flyButton" class="primary" type="button">✦ Fly</button>
+      <button id="dashButton" type="button">➜ Dash</button>
+      <span id="status" role="status">Loading dragon.glb…</span>
+    </div>
+  </div>
+  <div class="vignette"></div>
+
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+    import { GLTFLoader } from 'https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/loaders/GLTFLoader.js';
+
+    const status = document.querySelector('#status');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#09182a');
+    scene.fog = new THREE.FogExp2('#09182a', 0.035);
+
+    const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 100);
+    camera.position.set(0, 1.1, 8.5);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    document.body.prepend(renderer.domElement);
+
+    scene.add(new THREE.HemisphereLight(0xb9e8ff, 0x182137, 2.2));
+    const keyLight = new THREE.DirectionalLight(0xffe4bd, 3.2);
+    keyLight.position.set(-3, 6, 5);
+    scene.add(keyLight);
+    const rimLight = new THREE.PointLight(0x36bdf2, 35, 18);
+    rimLight.position.set(4, 1, -3);
+    scene.add(rimLight);
+
+    // A soft starfield gives the model depth without requiring extra asset files.
+    const starsGeometry = new THREE.BufferGeometry();
+    const starPositions = [];
+    for (let i = 0; i < 500; i++) {
+      starPositions.push((Math.random() - 0.5) * 34, (Math.random() - 0.5) * 20, -3 - Math.random() * 25);
+    }
+    starsGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+    const stars = new THREE.Points(starsGeometry, new THREE.PointsMaterial({ color: 0xa9dfff, size: 0.035, transparent: true, opacity: 0.8 }));
+    scene.add(stars);
+
+    const dragonRig = new THREE.Group();
+    scene.add(dragonRig);
+    let mixer = null;
+    let flying = true;
+    let dashStarted = -Infinity;
+    const clock = new THREE.Clock();
+    const loader = new GLTFLoader();
+
+    // Place dragon.glb beside this HTML file in the repository.
+    loader.load('./dragon.glb', (gltf) => {
+      const model = gltf.scene;
+      const bounds = new THREE.Box3().setFromObject(model);
+      const size = bounds.getSize(new THREE.Vector3());
+      const center = bounds.getCenter(new THREE.Vector3());
+      const largestDimension = Math.max(size.x, size.y, size.z) || 1;
+      model.scale.setScalar(3.2 / largestDimension);
+      model.position.sub(center.multiplyScalar(model.scale.x));
+      dragonRig.add(model);
+      if (gltf.animations.length) {
+        mixer = new THREE.AnimationMixer(model);
+        gltf.animations.forEach((clip) => mixer.clipAction(clip).play());
+      }
+      status.textContent = gltf.animations.length ? 'Ready — model animation included' : 'Ready — use Fly and Dash';
+    }, undefined, (error) => {
+      console.error('Could not load ./dragon.glb', error);
+      status.textContent = 'Could not load dragon.glb — add it beside index.html';
+    });
+
+    const flyButton = document.querySelector('#flyButton');
+    document.querySelector('#dashButton').addEventListener('click', () => { dashStarted = clock.elapsedTime; });
+    flyButton.addEventListener('click', () => {
+      flying = !flying;
+      flyButton.textContent = flying ? '✦ Fly' : 'Ⅱ Pause';
+      flyButton.classList.toggle('primary', flying);
+    });
+    addEventListener('keydown', (event) => {
+      if (event.code === 'Space') { event.preventDefault(); flying = !flying; flyButton.textContent = flying ? '✦ Fly' : 'Ⅱ Pause'; flyButton.classList.toggle('primary', flying); }
+      if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') dashStarted = clock.elapsedTime;
+    });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const elapsed = clock.getElapsedTime();
+      const delta = Math.min(clock.getDelta(), 0.05);
+      if (mixer) mixer.update(delta);
+
+      const bob = flying ? Math.sin(elapsed * 2.2) * 0.22 : 0;
+      const dashAge = elapsed - dashStarted;
+      const dash = dashAge >= 0 && dashAge < 0.65 ? Math.sin(Math.PI * dashAge / 0.65) : 0;
+      dragonRig.position.set(Math.sin(elapsed * 0.55) * 0.48 + dash * 1.15, bob + dash * 0.08, 0);
+      dragonRig.rotation.z = flying ? Math.sin(elapsed * 2.2) * 0.045 - dash * 0.12 : 0;
+      dragonRig.rotation.y = Math.sin(elapsed * 0.45) * 0.12 - dash * 0.16;
+      stars.rotation.y = elapsed * 0.006;
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+      renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    });
+  </script>
+</body>
+</html>
